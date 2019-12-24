@@ -73,9 +73,8 @@ const client = new textToSpeech.TextToSpeechClient({
 
   // ヘルムホルツだけになったらチャンネルから落ちる
   discordClient.on('voiceStateUpdate', (oldMember, newMember) => {
-    const channel = newMember.voiceChannel || oldMember.voiceChannel;
     const conn = discordClient.voiceConnections.get(DISCORD_GUILD_ID);
-    if((!channel || channel.members.array().length < 2) && conn) {
+    if(conn && conn.channel && conn.channel.members.array().length < 2) {
       conn.disconnect();
     }
   });
