@@ -87,7 +87,7 @@ const client = new textToSpeech.TextToSpeechClient({
     const channel = message.member.voiceChannel;
     if(
       guild.id !== DISCORD_GUILD_ID ||
-      channel.id !== DISCORD_CHANNEL_ID ||
+      (!channel || channel.id !== DISCORD_CHANNEL_ID) ||
       message.channel.id !== DISCORD_SOURCE_CHANNEL_ID
     ) {
       return;
@@ -105,6 +105,6 @@ const client = new textToSpeech.TextToSpeechClient({
   discordClient.once('ready', () => {
     console.log('Connected to Discord successfully!');
   });
-  
+
   discordClient.login(DISCORD_TOKEN);
 })();
