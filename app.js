@@ -64,7 +64,7 @@ async function textToSpeechBase64(text) {
 const client = new textToSpeech.TextToSpeechClient({
   credentials: {
     client_email: GOOGLE_CLIENT_EMAIL,
-    private_key: GOOGLE_PRIVATE_KEY
+    private_key: GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
   }
 });
 
