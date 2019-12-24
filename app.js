@@ -98,7 +98,7 @@ const client = new textToSpeech.TextToSpeechClient({
     const conn = discordClient.voiceConnections.get(DISCORD_GUILD_ID) || await channel.join();
     const text = message.content.slice(0, 50);
 
-    conn.playArbitraryInput(await textToSpeechBase64(text));
+    conn.playArbitraryInput(await textToSpeechBase64(text), {passes: 3, bitrate: 'auto'});
   });
 
   discordClient.once('ready', () => {
