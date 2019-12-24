@@ -2,7 +2,21 @@
 
 ## Docker
 
-作り途中
+Discordの各種IDを調べて環境変数に書き込む。
+
+各種IDは設定から開発者モードを有効化して「右クリック→IDをコピー」で取得できる。
+
+* DISCORD_TOKEN: botのトークン（開発者ページの「Bot」から取得）
+* DISCORD_GUILD_ID: サーバID
+* DISCORD_CHANNEL_ID: ボイスチャンネルのID
+* DISCORD_SOURCE_CHANNEL_ID: テキストチャンネルのID
+
+Google Cloud Platform で Cloud Text-to-Speech APIを有効にし、サービスアカウントを作る。
+
+* GOOGLE_CLIENT_EMAIL: サービスアカウントのメールアドレス
+* GOOGLE_PRIVATE_KEY: サービスアカウントのプライベートキー
+
+あとはビルドしてこれらの環境変数とともに実行する。
 
 ## 手動で動かす
 
