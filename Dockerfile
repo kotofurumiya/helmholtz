@@ -1,10 +1,10 @@
-FROM node:12-stretch
+FROM node:8-stretch
 
 RUN apt update && apt install -y git ffmpeg && \
     git clone https://github.com/kotofurumiya/helmholtz.git && \
     cd helmholtz && \
     npm install
 
-WORKDIR helmholtz
+WORKDIR /helmholtz
 
 ENTRYPOINT ["node", "app.js"]

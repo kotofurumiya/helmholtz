@@ -52,13 +52,13 @@ if(lacksEnv) {
 async function textToSpeechBase64(text) {
   const request = {
     input: {text},
-    voice: {languageCode: 'ja'},
+    voice: {languageCode: 'ja-JP'},
     audioConfig: {audioEncoding: 'MP3'}
   };
 
   const [response] = await client.synthesizeSpeech(request);
-  const buffer = Buffer.from(response.audioContent);
-  return `data:audio/mpeg;base64,${buffer.toString('base64')}`;
+  const buffer = Buffer.from(response.audioContent.buffer);
+  return `data:‎audio/mpeg;base64,${buffer.toString('base64')}`;
 }
 
 const client = new textToSpeech.TextToSpeechClient({
@@ -94,11 +94,11 @@ const client = new textToSpeech.TextToSpeechClient({
 
     // 誰もいなかったら参加しない
     if(channel.members.array().length < 1) { return; }
-    
+
     const conn = discordClient.voiceConnections.get(DISCORD_GUILD_ID) || await channel.join();
     const text = message.content.slice(0, 50);
 
-    conn.playArbitraryInput(await textToSpeechBase64(text), {passes: 3, bitrate: 32000});
+    conn.playArbitraryInput(await textToSpeechBase64(text), {passes: 3, bitrate: 'auto'});
   });
 
   discordClient.once('ready', () => {
