@@ -98,7 +98,11 @@ const client = new textToSpeech.TextToSpeechClient({
     // 誰もいなかったら参加しない
     if(channel.members.array().length < 1) { return; }
 
-    const conn = discordClient.voiceConnections.get(DISCORD_GUILD_ID) || await channel.join();
+    // 発言者の参加チャンネルが、
+    // 今のヘルムホルツ参加チャンネルと違うなら移動する
+    const currentConnection = discordClient.voiceConnections.get(DISCORD_GUILD_ID);
+    const shouldMove = !currentConnection || currentConnection.channel.id !== channel.id;
+    const conn = shouldMove ? await channel.join() : currentConnection;
 
     conn.playArbitraryInput(await textToSpeechBase64(text), {passes: 3, bitrate: 'auto'});
   });
