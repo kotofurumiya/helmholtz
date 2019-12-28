@@ -1,5 +1,10 @@
 # Discord読み上げbot ヘルムホルツ
 
+特定のテキストチャンネルに書き込まれたメッセージを、
+ボイスチャンネルで読み上げます。
+
+マイクをミュートしている人のメッセージしか読み上げません。
+
 ## Docker
 
 Discordの各種IDを調べて環境変数に書き込む。
@@ -8,7 +13,6 @@ Discordの各種IDを調べて環境変数に書き込む。
 
 * DISCORD_TOKEN: botのトークン（開発者ページの「Bot」から取得）
 * DISCORD_GUILD_ID: サーバID
-* DISCORD_CHANNEL_ID: ボイスチャンネルのID
 * DISCORD_SOURCE_CHANNEL_ID: テキストチャンネルのID
 
 Google Cloud Platform で Cloud Text-to-Speech APIを有効にし、サービスアカウントを作る。
@@ -33,7 +37,6 @@ Discordの各種IDを調べて環境変数に書き込む。
 
 * DISCORD_TOKEN: botのトークン（開発者ページの「Bot」から取得）
 * DISCORD_GUILD_ID: サーバID
-* DISCORD_CHANNEL_ID: ボイスチャンネルのID
 * DISCORD_SOURCE_CHANNEL_ID: テキストチャンネルのID
 
 Google Cloud Platform で Cloud Text-to-Speech APIを有効にし、サービスアカウントを作る。
@@ -46,7 +49,6 @@ Google Cloud Platform で Cloud Text-to-Speech APIを有効にし、サービス
 ```
 export DISCORD_TOKEN="token"
 export DISCORD_GUILD_ID="00000"
-export DISCORD_CHANNEL_ID="11111"
 export DISCORD_SOURCE_CHANNEL_ID="12345"
 export GOOGLE_CLIENT_EMAIL="serviceaccount@mail.com"
 export GOOGLE_PRIVATE_KEY=$'privkey'
