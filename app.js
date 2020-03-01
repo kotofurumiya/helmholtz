@@ -90,7 +90,11 @@ const client = new textToSpeech.TextToSpeechClient({
       return;
     }
 
-    const text = message.content.replace(/https?:\/\/\S+/g, '').slice(0, 50);
+    const text = message
+        .content
+        .replace(/https?:\/\/\S+/g, '')
+        .replace(/<a?:.*?:\d+>/g, '')   // カスタム絵文字を除去
+        .slice(0, 50);
 
     // テキストが空なら何もしない
     if(!text) { return; }
