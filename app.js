@@ -46,7 +46,10 @@ if(lacksEnv) {
 async function textToSpeechBase64(text) {
   const request = {
     input: {text},
-    voice: {languageCode: 'ja-JP'},
+    voice: {
+      languageCode: 'ja-JP',
+      name: 'ja-JP-Wavenet-A'
+    },
     audioConfig: {
       audioEncoding: 'MP3',
       speakingRate: 1.1
