@@ -1,7 +1,29 @@
 const Discord = require("discord.js");
 const textToSpeech = require('@google-cloud/text-to-speech');
+const { Readable } = require('stream');
 
 // 環境変数
+
+const envs = [
+  'DISCORD_TOKEN',
+  'DISCORD_GUILD_ID',
+  'DISCORD_SOURCE_CHANNEL_ID',
+  'GOOGLE_CLIENT_EMAIL',
+  'GOOGLE_PRIVATE_KEY'
+];
+
+let lacksEnv = false;
+for(const envName of envs) {
+  if(!process.env[envName]) {
+    lacksEnv = true;
+    console.error(`env variable not found: ${envName}`);
+  }
+}
+
+if(lacksEnv) {
+  process.exit(1);
+}
+
 const {
   DISCORD_TOKEN,
   DISCORD_GUILD_ID,
@@ -10,40 +32,9 @@ const {
   GOOGLE_PRIVATE_KEY
 } = process.env;
 
-let lacksEnv = false;
-
-if(!DISCORD_TOKEN) {
-  lacksEnv = true;
-  console.error('env variable not found: DISCORD_TOKEN');
-}
-
-if(!DISCORD_GUILD_ID) {
-  lacksEnv = true;
-  console.error('env variable not found: DISCORD_GUILD_ID');
-}
-
-if(!DISCORD_SOURCE_CHANNEL_ID) {
-  lacksEnv = true;
-  console.error('env variable not found: DISCORD_SOURCE_CHANNEL_ID');
-}
-
-if(!GOOGLE_CLIENT_EMAIL) {
-  lacksEnv = true;
-  console.error('env variable not found: GOOGLE_CLIENT_EMAIL');
-}
-
-if(!GOOGLE_PRIVATE_KEY) {
-  lacksEnv = true;
-  console.error('env variable not found: GOOGLE_PRIVATE_KEY');
-}
-
-if(lacksEnv) {
-  process.exit(1);
-}
-
-// テキスト → base64(mp3)
+// テキスト → ReadableStream
 // Cloud Text-to-Speech APIを使用
-async function textToSpeechBase64(text) {
+async function textToSpeechReadableStream(text) {
   const request = {
     input: {text},
     voice: {
@@ -51,14 +42,16 @@ async function textToSpeechBase64(text) {
       name: 'ja-JP-Wavenet-A'
     },
     audioConfig: {
-      audioEncoding: 'MP3',
-      speakingRate: 1.1
+      audioEncoding: 'OGG_OPUS',
+      speakingRate: 1.2
     }
   };
 
   const [response] = await client.synthesizeSpeech(request);
-  const buffer = Buffer.from(response.audioContent.buffer);
-  return `data:‎audio/mpeg;base64,${buffer.toString('base64')}`;
+  const stream = new Readable({ read() {} });
+  stream.push(response.audioContent);
+
+  return stream;
 }
 
 const client = new textToSpeech.TextToSpeechClient({
@@ -69,11 +62,14 @@ const client = new textToSpeech.TextToSpeechClient({
 });
 
 (async function main() {
-  const discordClient = new Discord.Client();
+  const discordClient = new Discord.Client({
+    messageCacheMaxSize: 20,
+    messageSweepInterval: 30
+  });
 
   // ヘルムホルツだけになったらチャンネルから落ちる
-  discordClient.on('voiceStateUpdate', (oldMember, newMember) => {
-    const conn = discordClient.voiceConnections.get(DISCORD_GUILD_ID);
+  discordClient.on('voiceStateUpdate', (oldState, newState) => {
+    const conn = discordClient.voice.connections.get(DISCORD_GUILD_ID);
     if(conn && conn.channel && conn.channel.members.array().length < 2) {
       conn.disconnect();
     }
@@ -83,11 +79,11 @@ const client = new textToSpeech.TextToSpeechClient({
   // ボイスチャンネルに参加して発言する
   discordClient.on('message', async (message) => {
     const guild = message.guild;
-    const channel = message.member.voiceChannel;
+    const channel = message.member.voice.channel;
 
     // ミュートの人の特定テキストチャンネルの発言だけ拾う
     if(
-      !message.member.selfMute || guild.id !== DISCORD_GUILD_ID || 
+      !message.member.voice.selfMute || guild.id !== DISCORD_GUILD_ID || 
       !channel || message.channel.id !== DISCORD_SOURCE_CHANNEL_ID
     ) {
       return;
@@ -107,11 +103,11 @@ const client = new textToSpeech.TextToSpeechClient({
 
     // 発言者の参加チャンネルが、
     // 今のヘルムホルツ参加チャンネルと違うなら移動する
-    const currentConnection = discordClient.voiceConnections.get(DISCORD_GUILD_ID);
+    const currentConnection = discordClient.voice.connections.get(DISCORD_GUILD_ID);
     const shouldMove = !currentConnection || currentConnection.channel.id !== channel.id;
     const conn = shouldMove ? await channel.join() : currentConnection;
 
-    conn.playArbitraryInput(await textToSpeechBase64(text), {passes: 3, bitrate: 'auto'});
+    conn.play(await textToSpeechReadableStream(text), {highWaterMark: 6, bitrate: 'auto'});
   });
 
   discordClient.once('ready', () => {
@@ -119,4 +115,4 @@ const client = new textToSpeech.TextToSpeechClient({
   });
 
   discordClient.login(DISCORD_TOKEN);
-})();
+})().catch((e) => console.error(e));
