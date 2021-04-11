@@ -16,19 +16,24 @@ Discordの各種IDを調べて環境変数に書き込む。
 * DISCORD_SOURCE_CHANNEL_ID: テキストチャンネルのID
 
 Google Cloud Platform で Cloud Text-to-Speech APIを有効にし、サービスアカウントを作る。
-
-* GOOGLE_CLIENT_EMAIL: サービスアカウントのメールアドレス
-* GOOGLE_PRIVATE_KEY: サービスアカウントのプライベートキー
+実行するコンテナ上でサービスアカウントの認証が通っている状態にする。
 
 あとはビルドしてこれらの環境変数とともに実行する。
 
 ## 手動で動かす
 
-依存モジュールをインストールする。ffmpeg必須。
+Node.jsのv14以降で動かす。
+
+依存モジュールをインストールする。
 
 ```
-sudo apt install ffmpeg
 npm install
+```
+
+ビルドする。
+
+```
+npm run build
 ```
 
 Discordの各種IDを調べて環境変数に書き込む。
@@ -40,9 +45,7 @@ Discordの各種IDを調べて環境変数に書き込む。
 * DISCORD_SOURCE_CHANNEL_ID: テキストチャンネルのID
 
 Google Cloud Platform で Cloud Text-to-Speech APIを有効にし、サービスアカウントを作る。
-
-* GOOGLE_CLIENT_EMAIL: サービスアカウントのメールアドレス
-* GOOGLE_PRIVATE_KEY: サービスアカウントのプライベートキー
+`gcloud` コマンドを使うなどしてCloud Text-to-Speech APIにアクセスできるアカウントでログインする。
 
 これらの環境変数と一緒に以下を実行する。
 
@@ -50,7 +53,15 @@ Google Cloud Platform で Cloud Text-to-Speech APIを有効にし、サービス
 export DISCORD_TOKEN="token"
 export DISCORD_GUILD_ID="00000"
 export DISCORD_SOURCE_CHANNEL_ID="12345"
-export GOOGLE_CLIENT_EMAIL="serviceaccount@mail.com"
-export GOOGLE_PRIVATE_KEY=$'privkey'
-node app.js
+npm run start
 ```
+
+## ログ出力
+
+標準出力だけでなくCloudLoggingにも追加で出力したい場合、
+
+```
+export ENABLE_CLOUD_LOGGING=true
+```
+
+この場合サービスアカウントにCloudLogging出力の権限がないとエラーになるので注意。
