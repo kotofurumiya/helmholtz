@@ -1,5 +1,10 @@
 import { TextToSpeechClient } from '@google-cloud/text-to-speech';
 
+export type SynthesizeOptions = {
+  voiceGender?: 'male' | 'female';
+  voicePitch?: number;
+};
+
 export type TextToSpeech = {
   /**
    * Warm up a CloudTTS client.
@@ -13,7 +18,7 @@ export type TextToSpeech = {
    * @param text - Text to speech, clamped to max 50 characters.
    * @returns Promise\<Uint8Array | null | undefined\>
    */
-  synthesize: (text: string) => Promise<Uint8Array | null | undefined>;
+  synthesize: (text: string, options?: SynthesizeOptions) => Promise<Uint8Array | null | undefined>;
 
   close: () => Promise<void>;
 };
@@ -39,16 +44,20 @@ export class GoogleCloudTextToSpeech implements TextToSpeech {
     return this.#ttsClient.initialize().then(() => undefined);
   }
 
-  async synthesize(text: string): Promise<Uint8Array | null | undefined> {
+  async synthesize(text: string, options: SynthesizeOptions = {}): Promise<Uint8Array | null | undefined> {
+    const voiceName = options.voiceGender === 'male' ? 'ja-JP-Wavenet-C' : 'ja-JP-Wavenet-A';
+    const voicePitch = options.voicePitch || 1.0;
+
     const request = {
       input: { text },
       voice: {
         languageCode: 'ja-JP',
-        name: 'ja-JP-Wavenet-A',
+        name: voiceName,
       },
       audioConfig: {
         audioEncoding: 'OGG_OPUS',
         speakingRate: 1.2,
+        pitch: voicePitch,
       },
     } as const;
 

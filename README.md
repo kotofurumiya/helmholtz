@@ -5,6 +5,35 @@
 
 マイクをミュートしている人のメッセージしか読み上げません。
 
+## Slash Commandの登録
+
+Helmholtzはスラッシュコマンドに対応している。
+
+```
+/helmholtz gender male
+/helmholtz gender female
+/hemlholtz pitch 5
+```
+
+スラッシュコマンドを使うには以下の条件を満たしている必要がある。
+
+* botアカウントを `bot` + `applications.commands` でサーバに招待している
+  * 普通は `applications.commands` はつけていないと思うので、bot画面からもうち一度招待
+  * パーミッションは上書きできるので既にbotがサーバに入っていてもキックする必要はない
+* スラッシュコマンドをサーバに登録している
+  * スクリプトを同梱しているのでそれを実行すればok。
+
+コマンドの登録は
+
+```
+export DISCORD_TOKEN="botのトークン（Discordの開発者ページから取得できる）"
+export DISCORD_APPLICATION_ID="botのアプリケーションID"
+export DISCORD_GUILD_ID="サーバID"
+npm run start:registercommands
+```
+
+で行える。
+
 ## Docker
 
 Discordの各種IDを調べて環境変数に書き込む。
@@ -56,12 +85,13 @@ export DISCORD_SOURCE_CHANNEL_ID="12345"
 npm run start
 ```
 
-## ログ出力
+## 追加機能
 
-標準出力だけでなくCloudLoggingにも追加で出力したい場合、
+また、以下の環境変数も使用できる。
 
-```
-export ENABLE_CLOUD_LOGGING=true
-```
+* ENABLE_CLOUD_LOGGING=true
+* ENABLE_SYNC_WITH_FIRESTORE=true
 
-この場合サービスアカウントにCloudLogging出力の権限がないとエラーになるので注意。
+`ENABLE_CLOUD_LOGGING` を有効にするとログをCloud Loggingにも出力する。サービスアカウントに追加でCloud Logging出力の権限が必要になる。
+
+`ENABLE_SYNC_WITH_FIRESTORE` を有効にするとスラッシュコマンドによるユーザ設定をFirestoreに永続化する。Cloud Firestoreのセットアップと、サービスアカウントに追加でCloud Firestoreの編集権限が必要になる。
