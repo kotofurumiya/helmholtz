@@ -1,12 +1,21 @@
-FROM node:12-stretch
+FROM node:14-buster-slim AS build-stage
 
-COPY app.js package.json package-lock.json /helmholtz/
+COPY ./ /helmholtz/
+WORKDIR /helmholtz
+RUN apt-get update && apt-get install -y --no-install-recommends \
+ python \
+ make \
+ gcc \
+ g++ \
+ libc-dev \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
+RUN npm ci && npm run build && npm prune --production
 
+FROM node:14-buster-slim
+
+COPY --from=build-stage /helmholtz /helmholtz
 WORKDIR /helmholtz
 
-RUN apt update && \
-    apt install -y autoconf automake ffmpeg
-
-RUN npm install
-
-ENTRYPOINT ["node", "app.js"]
+USER node
+ENTRYPOINT ["node", "dist/helmholtz.js"]
