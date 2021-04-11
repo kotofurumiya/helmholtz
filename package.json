@@ -6,15 +6,17 @@
   "private": true,
   "scripts": {
     "start": "ts-node src/index.ts",
-    "build": "esbuild src/index.ts --bundle --platform=node --target=node14 --external:@google-cloud/text-to-speech --external:@google-cloud/logging-bunyan --external:discord.js --external:@discordjs/opus --outfile=dist/helmholtz.js",
-    "format": "prettier --write \"*.js\" \"src/**/*\"",
-    "lint": "prettier --check \"src/**/*\" && eslint .",
+    "start:registercommands": "ts-node tools/register_slash_commands.ts",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node14 --external:@google-cloud/firestore --external:@google-cloud/text-to-speech --external:@google-cloud/logging-bunyan --external:discord.js --external:@discordjs/opus --outfile=dist/helmholtz.js",
+    "format": "prettier --write \"*.js\" \"src/**/*\" \"tools/**/*\"",
+    "lint": "prettier --check \"src/**/*\" \"tools/**/*\" && eslint .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Koto Furumiya <kotofurumiya@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "@discordjs/opus": "^0.5.0",
+    "@google-cloud/firestore": "^4.9.9",
     "@google-cloud/logging-bunyan": "^3.0.2",
     "@google-cloud/text-to-speech": "^3.1.3",
     "bunyan": "^1.8.15",
@@ -23,12 +25,14 @@
   "devDependencies": {
     "@types/bunyan": "^1.8.6",
     "@types/node": "^14.14.37",
+    "@types/node-fetch": "^2.5.10",
     "@typescript-eslint/eslint-plugin": "^4.21.0",
     "@typescript-eslint/parser": "^4.21.0",
     "esbuild": "^0.11.7",
     "eslint": "^7.24.0",
     "eslint-plugin-tsdoc": "^0.2.11",
     "libsodium-wrappers": "^0.7.9",
+    "node-fetch": "^2.6.1",
     "prettier": "^2.2.1",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.4"

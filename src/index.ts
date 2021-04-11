@@ -17,20 +17,30 @@ const config: HelmholtzConfig = {
     sourceChannelId: envs.DISCORD_SOURCE_CHANNEL_ID,
   },
   logger,
+  syncWithFirestore:
+    !!process.env.ENABLE_SYNC_WITH_FIRESTORE && process.env.ENABLE_SYNC_WITH_FIRESTORE.toLowerCase() !== 'false',
 };
 
 const helmholtz = new Helmholtz(config);
 
 process.on('uncaughtException', async (error) => {
   logger?.error(error);
-  await helmholtz.destroy();
+  await helmholtz.destroy().catch(() => undefined);
   process.exit(1);
 });
 
 process.on('unhandledRejection', async (error) => {
   logger?.error(error);
-  await helmholtz.destroy();
+  await helmholtz.destroy().catch(() => undefined);
   process.exit(1);
+});
+
+process.on('exit', () => {
+  helmholtz.destroy().catch(() => undefined);
+});
+
+process.on('SIGTERM', () => {
+  helmholtz.destroy().catch(() => undefined);
 });
 
 helmholtz.start();
