@@ -15,7 +15,7 @@
   "author": "Koto Furumiya <kotofurumiya@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@discordjs/opus": "^0.5.0",
+    "@discordjs/opus": "^0.8.0",
     "@google-cloud/firestore": "^4.9.9",
     "@google-cloud/logging-bunyan": "^3.0.2",
     "@google-cloud/text-to-speech": "^3.1.3",
