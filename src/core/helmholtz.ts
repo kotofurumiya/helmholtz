@@ -1,6 +1,6 @@
 import { Readable } from 'stream';
 import Discord from 'discord.js';
-import { TextToSpeech, GoogleCloudTextToSpeech } from './tts';
+import { TextToSpeech } from './tts';
 import type Logger from 'bunyan';
 import { Firestore, FieldValue } from '@google-cloud/firestore';
 
@@ -54,13 +54,19 @@ type HelmholtzUserPreferences = {
 };
 
 export type HelmholtzConfig = {
-  readonly discord: {
+  readonly discord?: {
     readonly token: string;
     readonly guildId: string;
     readonly sourceChannelId: string;
   };
+  readonly ttsClient: TextToSpeech;
   readonly logger?: Logger;
   readonly syncWithFirestore?: boolean;
+};
+
+type DestroyContext = {
+  reason?: string;
+  error?: unknown;
 };
 
 export class Helmholtz {
@@ -73,7 +79,7 @@ export class Helmholtz {
   #firestore?: Firestore;
 
   constructor(config: HelmholtzConfig) {
-    this.#tts = new GoogleCloudTextToSpeech();
+    this.#tts = config.ttsClient;
     this.#tts.warmup();
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     this.#audioStream = new Readable({ read: () => {} });
@@ -89,6 +95,13 @@ export class Helmholtz {
 
   start(): void {
     this.#discord?.destroy();
+
+    if (!this.#discordConfig) {
+      this.#logger?.debug({
+        helmholtzMessage: 'helmholtz does not connect to discord, since cannot detect any config',
+      });
+      return;
+    }
 
     const discordClient = new Discord.Client({
       messageCacheMaxSize: 20,
@@ -169,7 +182,7 @@ export class Helmholtz {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   handleVoiceStateUpdate(oldState: Discord.VoiceState, newState: Discord.VoiceState): void {
-    if (!this.#discord) {
+    if (!this.#discord || !this.#discordConfig) {
       return;
     }
 
@@ -189,7 +202,7 @@ export class Helmholtz {
   }
 
   async handleMessage(message: Discord.Message): Promise<void> {
-    if (!this.#discord) {
+    if (!this.#discord || !this.#discordConfig) {
       return;
     }
 
@@ -254,9 +267,9 @@ export class Helmholtz {
 
     // genarate audio and push it to stream
     try {
-      const userPref = await this.getUserPreferecnes(message.author.id);
+      const userPref = await this.getUserPreferences(message.author.id);
       const voiceGender = userPref.voiceGender || 'female';
-      const voicePitch = userPref.voicePitch || 1.0;
+      const voicePitch = userPref.voicePitch ?? 0.0;
 
       const speechData = await this.#tts.synthesize(text, {
         voiceGender,
@@ -281,7 +294,7 @@ export class Helmholtz {
   }
 
   async moveToVoiceChannel(channel: Discord.VoiceChannel): Promise<Discord.VoiceConnection | undefined> {
-    if (!this.#discord) {
+    if (!this.#discord || !this.#discordConfig) {
       return;
     }
 
@@ -309,7 +322,7 @@ export class Helmholtz {
       return false;
     }
 
-    const pref = await this.getUserPreferecnes(userId);
+    const pref = await this.getUserPreferences(userId);
     const newPref = { ...pref, ...preferences };
     this.#userPreferences.set(userId, newPref);
 
@@ -328,7 +341,7 @@ export class Helmholtz {
     return true;
   }
 
-  async getUserPreferecnes(userId: string): Promise<HelmholtzUserPreferences> {
+  async getUserPreferences(userId: string): Promise<HelmholtzUserPreferences> {
     if (!userId) {
       return {};
     }
@@ -359,7 +372,7 @@ export class Helmholtz {
       return;
     }
 
-    // FIXME: access to internal `api` object because discord.js not supports slahs commands yet.
+    // FIXME: access to internal `api` object because discord.js not supports slash commands yet.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (this.#discord as any)?.api.interactions(interaction.id, interaction.token).callback.post({
       data: {
@@ -426,10 +439,24 @@ export class Helmholtz {
     }
   }
 
-  async destroy(): Promise<void> {
-    const conn = this.#discord?.voice?.connections.get(this.#discordConfig.guildId);
-    conn?.disconnect();
+  async destroy(context?: DestroyContext): Promise<void> {
+    const { reason, error } = context || {};
+
+    this.#logger?.info({
+      helmholtzMessage: 'destroying helmholtz client...',
+      reason,
+      error,
+    });
+
+    if (this.#discordConfig) {
+      const conn = this.#discord?.voice?.connections.get(this.#discordConfig.guildId);
+      conn?.disconnect();
+    }
     this.#discord?.destroy();
     await this.#tts.close();
+
+    this.#logger?.info({
+      helmholtzMessage: 'helmholtz client is destroyed successfully',
+    });
   }
 }

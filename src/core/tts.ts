@@ -1,4 +1,5 @@
 import { TextToSpeechClient } from '@google-cloud/text-to-speech';
+import type Logger from 'bunyan';
 
 export type SynthesizeOptions = {
   voiceGender?: 'male' | 'female';
@@ -40,13 +41,13 @@ export class GoogleCloudTextToSpeech implements TextToSpeech {
 
   async warmup(): Promise<void> {
     // initialize() is called automatically
-    // when calling any method for the fiest time.
+    // when calling any method for the first time.
     return this.#ttsClient.initialize().then(() => undefined);
   }
 
   async synthesize(text: string, options: SynthesizeOptions = {}): Promise<Uint8Array | null | undefined> {
     const voiceName = options.voiceGender === 'male' ? 'ja-JP-Wavenet-C' : 'ja-JP-Wavenet-A';
-    const voicePitch = options.voicePitch || 1.0;
+    const voicePitch = options.voicePitch ?? 0.0;
 
     const request = {
       input: { text },
@@ -75,5 +76,35 @@ export class GoogleCloudTextToSpeech implements TextToSpeech {
 
   async close(): Promise<void> {
     await this.#ttsClient.close();
+  }
+}
+
+export class FakeTextToSpeech implements TextToSpeech {
+  #logger?: Logger;
+
+  constructor(options: { logger?: Logger } = {}) {
+    this.#logger = options.logger;
+  }
+
+  async warmup(): Promise<void> {
+    this.#logger?.debug({
+      helmholtzMessage: 'FakeTextToSpeech: warmup()',
+    });
+  }
+
+  async synthesize(text: string, options: SynthesizeOptions = {}): Promise<Uint8Array | null | undefined> {
+    this.#logger?.debug({
+      helmholtzMessage: 'FakeTextToSpeech: synthesize()',
+      text,
+      options,
+    });
+
+    return;
+  }
+
+  async close(): Promise<void> {
+    this.#logger?.debug({
+      helmholtzMessage: 'FakeTextToSpeech: close()',
+    });
   }
 }
