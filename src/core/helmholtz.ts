@@ -1,52 +1,24 @@
 import { Readable } from 'stream';
-import Discord from 'discord.js';
+import Discord, {
+  ChatInputCommandInteraction,
+  Events,
+  GatewayIntentBits,
+  Interaction,
+  Options,
+  VoiceBasedChannel,
+} from 'discord.js';
 import { TextToSpeech } from './tts';
 import type Logger from 'bunyan';
 import { Firestore, FieldValue } from '@google-cloud/firestore';
-
-// FIXME: remove this after discord.js supports slash commands
-type DiscordSlashCommandOption = {
-  readonly name: string;
-  readonly type: number;
-  readonly value?: string | number;
-  readonly options?: DiscordSlashCommandOption[];
-};
-
-// FIXME: remove this after discord.js supports slash commands
-type DiscordSlashCommand = {
-  readonly id: string;
-  readonly name: string;
-  readonly options?: DiscordSlashCommandOption[];
-};
-
-// FIXME: remove this after discord.js supports slash commands
-type DiscordInteraction = {
-  readonly id: string;
-  readonly application_id: string;
-  readonly type: number;
-  readonly token: string;
-  readonly member?: {
-    readonly user: {
-      readonly id: string;
-      readonly username: string;
-      readonly avatar: string;
-      readonly discriminator: string;
-      readonly public_flags: number;
-    };
-    readonly roles: string[];
-    readonly premium_since: string;
-    readonly permissions: string;
-    readonly pending: boolean;
-    readonly nick: string;
-    readonly mute: boolean;
-    readonly joined_at: string;
-    readonly is_pending: boolean;
-    readonly deaf: boolean;
-  };
-  readonly guild_id: string;
-  readonly data?: DiscordSlashCommand;
-  readonly channel_id: string;
-};
+import {
+  AudioPlayer,
+  StreamType,
+  VoiceConnection,
+  createAudioPlayer,
+  createAudioResource,
+  getVoiceConnection,
+  joinVoiceChannel,
+} from '@discordjs/voice';
 
 type HelmholtzUserPreferences = {
   voiceGender?: 'male' | 'female';
@@ -73,7 +45,7 @@ export class Helmholtz {
   #tts: TextToSpeech;
   #discord?: Discord.Client;
   #discordConfig: HelmholtzConfig['discord'];
-  #audioStream: Readable;
+  #audioPlayer: AudioPlayer;
   #userPreferences: Map<string, HelmholtzUserPreferences>;
   #logger?: Logger;
   #firestore?: Firestore;
@@ -81,8 +53,7 @@ export class Helmholtz {
   constructor(config: HelmholtzConfig) {
     this.#tts = config.ttsClient;
     this.#tts.warmup();
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    this.#audioStream = new Readable({ read: () => {} });
+    this.#audioPlayer = createAudioPlayer();
     this.#discordConfig = config.discord;
     this.#userPreferences = new Map();
     this.#logger = config.logger;
@@ -104,12 +75,31 @@ export class Helmholtz {
     }
 
     const discordClient = new Discord.Client({
-      messageCacheMaxSize: 20,
-      messageSweepInterval: 30,
-      retryLimit: 3,
+      rest: {
+        retries: 3,
+      },
+      intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.GuildPresences,
+        GatewayIntentBits.MessageContent,
+      ],
+      makeCache: Options.cacheWithLimits({
+        ...Options.DefaultMakeCacheSettings,
+        MessageManager: 20,
+      }),
+      sweepers: {
+        ...Options.DefaultSweeperSettings,
+        messages: {
+          interval: 300,
+          lifetime: 30,
+        },
+      },
     });
 
-    discordClient.on('voiceStateUpdate', (oldState, newState) => {
+    discordClient.on(Events.VoiceStateUpdate, (oldState, newState) => {
       try {
         this.handleVoiceStateUpdate(oldState, newState);
       } catch (e) {
@@ -120,7 +110,7 @@ export class Helmholtz {
       }
     });
 
-    discordClient.on('message', (message) => {
+    discordClient.on(Events.MessageCreate, (message) => {
       this.handleMessage(message).catch((e) => {
         this.#logger?.error({
           helmholtzMessage: 'cannot handle message event',
@@ -129,8 +119,7 @@ export class Helmholtz {
       });
     });
 
-    // FIXME: replace ws event to client event after discord.js supports slash commands
-    discordClient.ws.on('INTERACTION_CREATE' as Discord.WSEventType, async (interaction: DiscordInteraction) => {
+    discordClient.on(Events.InteractionCreate, async (interaction) => {
       try {
         await this.handleInteraction(interaction);
       } catch (e) {
@@ -180,19 +169,37 @@ export class Helmholtz {
     this.#discord = discordClient;
   }
 
+  getCurrentVoiceChannel(): [VoiceBasedChannel, VoiceConnection] | [] {
+    if (!this.#discord || !this.#discordConfig) {
+      return [];
+    }
+
+    const guildId = this.#discordConfig.guildId;
+    const guild = this.#discord.guilds.cache.get(guildId);
+    const guildUser = guild?.members.me;
+
+    const chan = guildUser?.voice.channel;
+    const conn = getVoiceConnection(guildId);
+
+    if (!chan || !conn || !conn.joinConfig.channelId) {
+      return [];
+    }
+
+    return [chan, conn] || [];
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   handleVoiceStateUpdate(oldState: Discord.VoiceState, newState: Discord.VoiceState): void {
     if (!this.#discord || !this.#discordConfig) {
       return;
     }
 
-    const guildId = this.#discordConfig.guildId;
-    const conn = this.#discord.voice?.connections?.get(guildId);
-    const activeMembers = conn?.channel.members.array() || [];
+    const [voiceChan, voiceConn] = this.getCurrentVoiceChannel();
+    const activeMembers = voiceChan?.members || new Map();
 
     // disconnect if there is only Helmholtz in VoiceChannel
-    if (activeMembers.length < 2) {
-      conn?.disconnect();
+    if (activeMembers.size < 2) {
+      voiceConn?.disconnect();
       return;
     }
 
@@ -243,7 +250,7 @@ export class Helmholtz {
     }
 
     // do nothing if no one is in a channel.
-    if (channelMembers.array().length < 1) {
+    if (channelMembers.size < 1) {
       return;
     }
 
@@ -251,15 +258,15 @@ export class Helmholtz {
     const text = message.content
       .replace(/https?:\/\/\S+/g, '') // remove URLs(annoying)
       .replace(/<a?:.*?:\d+>/g, '') // remove custom emojis(annoying)
-      .slice(0, 50); // up to 50 characters
+      .slice(0, 80); // up to 80 characters
 
     // do nothing if text is empty
     if (!text) {
       return;
     }
 
-    const currentHelmholtzConn = this.#discord.voice?.connections.get(helmholtzGuildId);
-    const shouldMove = !currentHelmholtzConn || currentHelmholtzConn.channel.id !== voiceChannel.id;
+    const currentHelmholtzConn = getVoiceConnection(helmholtzGuildId);
+    const shouldMove = !currentHelmholtzConn || currentHelmholtzConn.joinConfig.channelId !== voiceChannel.id;
 
     if (!currentHelmholtzConn || shouldMove) {
       await this.moveToVoiceChannel(voiceChannel);
@@ -277,7 +284,10 @@ export class Helmholtz {
       });
 
       if (speechData && speechData.length > 0) {
-        this.#audioStream.push(speechData);
+        const audio = createAudioResource(Readable.from(speechData), {
+          inputType: StreamType.OggOpus,
+        });
+        this.#audioPlayer.play(audio);
       } else {
         this.#logger?.warn({
           helmholtzMessage: 'empty audio emitted on text-to-speech service',
@@ -293,26 +303,24 @@ export class Helmholtz {
     }
   }
 
-  async moveToVoiceChannel(channel: Discord.VoiceChannel): Promise<Discord.VoiceConnection | undefined> {
+  async moveToVoiceChannel(channel: Discord.VoiceBasedChannel): Promise<VoiceConnection | undefined> {
     if (!this.#discord || !this.#discordConfig) {
       return;
     }
 
     const helmholtzGuildId = this.#discordConfig.guildId;
-    const currentHelmholtzConn = this.#discord.voice?.connections.get(helmholtzGuildId);
+    const currentHelmholtzConn = getVoiceConnection(helmholtzGuildId);
 
     // move to the channel
     currentHelmholtzConn?.disconnect();
-    const conn = await channel.join();
+    const conn = joinVoiceChannel({
+      channelId: channel.id,
+      guildId: channel.guild.id,
+      adapterCreator: channel.guild.voiceAdapterCreator,
+    });
 
     // reconnect audio stream
-    conn.play(this.#audioStream, {
-      type: 'ogg/opus', // depends on ./tts.ts
-      highWaterMark: 6, // default is 12
-      bitrate: 96,
-      fec: true, // enable forward error correction
-      volume: false, // discord.js doc says set this false improve perf.
-    });
+    conn.subscribe(this.#audioPlayer);
 
     return conn;
   }
@@ -363,35 +371,20 @@ export class Helmholtz {
     return pref || {};
   }
 
-  respondToInteraction(interaction: DiscordInteraction, content: string): void {
-    if (this.#discord && !('api' in this.#discord)) {
-      this.#logger?.warn({
-        helmholtzMessage: 'unofficial discord.js api `client.api` not found. You should find another way.',
-        feature: 'slash commands',
-      });
-      return;
-    }
-
-    // FIXME: access to internal `api` object because discord.js not supports slash commands yet.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (this.#discord as any)?.api.interactions(interaction.id, interaction.token).callback.post({
-      data: {
-        type: 4, // 4 = ChannelMessageWithSource
-        data: {
-          content,
-        },
-      },
+  respondToInteraction(interaction: ChatInputCommandInteraction, content: string): void {
+    interaction.reply({
+      content,
+      ephemeral: true,
     });
   }
 
-  async handleInteraction(interaction: DiscordInteraction): Promise<void> {
-    if (!this.#discord) {
+  async handleInteraction(interaction: Interaction): Promise<void> {
+    if (!this.#discord || !interaction.isChatInputCommand() || !interaction.command) {
       return;
     }
 
-    const command = interaction.data;
-    const subcommand = command?.options?.[0];
-    const subcommandOption = subcommand?.options?.[0];
+    const command = interaction.command;
+    const subcommand = interaction.options.getSubcommand();
     const commandMember = interaction.member; // undefined if command is invoked in DM
 
     if (!commandMember) {
@@ -402,13 +395,13 @@ export class Helmholtz {
     const memberId = commandMember.user.id;
     const memberName = commandMember.user.username;
 
-    if (command?.name.toLocaleLowerCase() !== 'helmholtz') {
+    if (command.name.toLocaleLowerCase() !== 'helmholtz') {
       this.respondToInteraction(interaction, `おっと！これは私への命令ではありませんね。適切に処理できません。`);
       return;
     }
 
-    if (subcommand?.name === 'gender') {
-      const voiceGender = subcommandOption?.value;
+    if (subcommand === 'gender') {
+      const voiceGender = interaction.options.getString('voice-gender');
 
       if (voiceGender === 'male' || voiceGender === 'female') {
         const displayStr = voiceGender === 'male' ? '男性' : '女性';
@@ -425,8 +418,9 @@ export class Helmholtz {
       return;
     }
 
-    if (subcommand?.name === 'pitch' && typeof subcommandOption?.value === 'number') {
-      const voicePitch = Math.max(-20, Math.min(20, subcommandOption.value));
+    const pitchValue = interaction.options.getInteger('value');
+    if (subcommand === 'pitch' && typeof pitchValue === 'number') {
+      const voicePitch = Math.max(-20, Math.min(20, pitchValue));
 
       const setSuccess = await this.setUserPreferences(memberId, { voicePitch });
       if (setSuccess) {
@@ -449,9 +443,10 @@ export class Helmholtz {
     });
 
     if (this.#discordConfig) {
-      const conn = this.#discord?.voice?.connections.get(this.#discordConfig.guildId);
+      const conn = getVoiceConnection(this.#discordConfig.guildId);
       conn?.disconnect();
     }
+
     this.#discord?.destroy();
     await this.#tts.close();
 

@@ -7,7 +7,7 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "start:registercommands": "ts-node tools/register_slash_commands.ts",
-    "build": "esbuild src/index.ts --bundle --platform=node --target=node14 --external:@google-cloud/firestore --external:@google-cloud/text-to-speech --external:@google-cloud/logging-bunyan --external:discord.js --external:@discordjs/opus --outfile=dist/helmholtz.js",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node18 --external:@google-cloud/firestore --external:@google-cloud/text-to-speech --external:@google-cloud/logging-bunyan --external:discord.js --external:@discordjs/opus --external:@discordjs/voice --outfile=dist/helmholtz.js",
     "format": "prettier --write \"*.js\" \"src/**/*\" \"tools/**/*\"",
     "lint": "prettier --check \"src/**/*\" \"tools/**/*\" && eslint .",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -15,26 +15,28 @@
   "author": "Koto Furumiya <kotofurumiya@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@discordjs/opus": "^0.8.0",
-    "@google-cloud/firestore": "^6.3.0",
-    "@google-cloud/logging-bunyan": "^4.1.2",
-    "@google-cloud/text-to-speech": "^4.0.3",
+    "@discordjs/opus": "^0.9.0",
+    "@discordjs/voice": "^0.16.0",
+    "@google-cloud/firestore": "^6.5.0",
+    "@google-cloud/logging-bunyan": "^4.2.2",
+    "@google-cloud/text-to-speech": "^4.2.2",
     "bunyan": "^1.8.15",
-    "discord.js": "^14.5.0"
+    "discord.js": "^14.9.0"
   },
   "devDependencies": {
     "@types/bunyan": "^1.8.8",
-    "@types/node": "^18.7.23",
-    "@types/node-fetch": "^2.6.2",
-    "@typescript-eslint/eslint-plugin": "^5.38.1",
-    "@typescript-eslint/parser": "^5.38.1",
-    "esbuild": "^0.15.9",
-    "eslint": "^8.24.0",
+    "@types/node": "^18.15.11",
+    "@types/node-fetch": "^2.6.3",
+    "@typescript-eslint/eslint-plugin": "^5.59.0",
+    "@typescript-eslint/parser": "^5.59.0",
+    "esbuild": "^0.17.17",
+    "eslint": "^8.38.0",
     "eslint-plugin-tsdoc": "^0.2.17",
-    "libsodium-wrappers": "^0.7.10",
-    "node-fetch": "^3.2.10",
-    "prettier": "^2.7.1",
+    "ffmpeg-static": "^5.1.0",
+    "libsodium-wrappers": "^0.7.11",
+    "node-fetch": "^3.3.1",
+    "prettier": "^2.8.7",
     "ts-node": "^10.9.1",
-    "typescript": "^4.8.3"
+    "typescript": "^5.0.4"
   }
 }
