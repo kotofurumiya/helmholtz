@@ -204,6 +204,11 @@ export class Helmholtz {
       return;
     }
 
+    const isSelf = newState.id === newState.guild.members.me?.id;
+    if (isSelf) {
+      return;
+    }
+
     const isStartChat = !oldState.channelId && !!newState.channelId;
 
     if (isStartChat) {
@@ -215,10 +220,10 @@ export class Helmholtz {
     }
 
     const [voiceChan, voiceConn] = this.getCurrentVoiceChannel();
-    const activeMembers = voiceChan?.members || new Map();
+    const activeMembers = voiceChan?.members;
 
     // disconnect if there is only Helmholtz in VoiceChannel
-    if (activeMembers.size < 2) {
+    if (activeMembers && activeMembers.size < 2) {
       voiceConn?.disconnect();
       return;
     }
