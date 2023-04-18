@@ -181,7 +181,7 @@ export class Helmholtz {
     const chan = guildUser?.voice.channel;
     const conn = getVoiceConnection(guildId);
 
-    if (!chan || !conn || !conn.joinConfig.channelId) {
+    if (!chan || !conn) {
       return [];
     }
 
@@ -192,6 +192,26 @@ export class Helmholtz {
   handleVoiceStateUpdate(oldState: Discord.VoiceState, newState: Discord.VoiceState): void {
     if (!this.#discord || !this.#discordConfig) {
       return;
+    }
+
+    // do nothing if message is sent from different server.
+    if (!newState.guild || newState.guild.id !== this.#discordConfig.guildId) {
+      this.#logger?.warn({
+        helmholtzMessage: 'discord guild server mismatch',
+        helmholtzGuild: this.#discordConfig.guildId,
+        messageGuildId: newState.guild?.id,
+      });
+      return;
+    }
+
+    const isStartChat = !oldState.channelId && !!newState.channelId;
+
+    if (isStartChat) {
+      const chan = this.#discord.channels.cache.get(this.#discordConfig.sourceChannelId);
+      if (chan?.isTextBased()) {
+        const text = `${newState.member?.toString()} が ${newState.channel?.toString()} に参加しました！`;
+        chan.send(text);
+      }
     }
 
     const [voiceChan, voiceConn] = this.getCurrentVoiceChannel();
@@ -220,6 +240,7 @@ export class Helmholtz {
     const voice = message.member?.voice;
     const voiceChannel = voice?.channel;
     const messageChannel = message.channel;
+    const helmholtzGuildUser = guild?.members.me;
 
     // do nothing if we cannot get a voice channel.
     // Note: In most cases, the message sender is not in any voice channel.
@@ -251,6 +272,11 @@ export class Helmholtz {
 
     // do nothing if no one is in a channel.
     if (channelMembers.size < 1) {
+      return;
+    }
+
+    // do nothing if message is sent by self
+    if (message.author.id === helmholtzGuildUser?.id) {
       return;
     }
 
