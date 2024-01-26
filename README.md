@@ -5,6 +5,27 @@
 
 マイクをミュートしている人のメッセージしか読み上げません。
 
+## 必要な権限
+
+- Privileged Gateway Intents
+  - ✅ PRESENCE INTENT
+  - ✅ SERVER MEMBERS INTENT
+  - ✅ MESSAGE CONTENT INTENT
+- OAuth2
+  - SCOPES
+    - ✅ bot
+    - ✅ applications.commands
+    - ✅ applications.commands.permission.update
+  - BOT PERMISSIONS
+    - GENERAL PERMISSIONS
+      - ✅ Read Message/View Channels
+    - TEXT PERMISSIONS
+      - ✅ Send Message
+      - ✅ Read Message History
+    - VOICE PERMISSIONS
+      - ✅ Connect
+      - ✅ Speak
+
 ## Slash Commandの登録
 
 Helmholtzはスラッシュコマンドに対応している。
@@ -17,11 +38,11 @@ Helmholtzはスラッシュコマンドに対応している。
 
 スラッシュコマンドを使うには以下の条件を満たしている必要がある。
 
-* botアカウントを `bot` + `applications.commands` でサーバに招待している
-  * 普通は `applications.commands` はつけていないと思うので、bot画面からもうち一度招待
-  * パーミッションは上書きできるので既にbotがサーバに入っていてもキックする必要はない
-* スラッシュコマンドをサーバに登録している
-  * スクリプトを同梱しているのでそれを実行すればok。
+- botアカウントを `bot` + `applications.commands` でサーバに招待している
+  - 普通は `applications.commands` はつけていないと思うので、bot画面からもうち一度招待
+  - パーミッションは上書きできるので既にbotがサーバに入っていてもキックする必要はない
+- スラッシュコマンドをサーバに登録している
+  - スクリプトを同梱しているのでそれを実行すればok。
 
 コマンドの登録は
 
@@ -40,9 +61,9 @@ Discordの各種IDを調べて環境変数に書き込む。
 
 各種IDは設定から開発者モードを有効化して「右クリック→IDをコピー」で取得できる。
 
-* DISCORD_TOKEN: botのトークン（開発者ページの「Bot」から取得）
-* DISCORD_GUILD_ID: サーバID
-* DISCORD_SOURCE_CHANNEL_ID: テキストチャンネルのID
+- DISCORD_TOKEN: botのトークン（開発者ページの「Bot」から取得）
+- DISCORD_GUILD_ID: サーバID
+- DISCORD_SOURCE_CHANNEL_ID: テキストチャンネルのID
 
 Google Cloud Platform で Cloud Text-to-Speech APIを有効にし、サービスアカウントを作る。
 実行するコンテナ上でサービスアカウントの認証が通っている状態にする。
@@ -51,7 +72,7 @@ Google Cloud Platform で Cloud Text-to-Speech APIを有効にし、サービス
 
 ## 手動で動かす
 
-Node.jsのv14以降で動かす。
+Node.jsのv20以降で動かす。
 
 依存モジュールをインストールする。
 
@@ -69,9 +90,9 @@ Discordの各種IDを調べて環境変数に書き込む。
 
 各種IDは設定から開発者モードを有効化して「右クリック→IDをコピー」で取得できる。
 
-* DISCORD_TOKEN: botのトークン（開発者ページの「Bot」から取得）
-* DISCORD_GUILD_ID: サーバID
-* DISCORD_SOURCE_CHANNEL_ID: テキストチャンネルのID
+- DISCORD_TOKEN: botのトークン（開発者ページの「Bot」から取得）
+- DISCORD_GUILD_ID: サーバID
+- DISCORD_SOURCE_CHANNEL_ID: テキストチャンネルのID
 
 Google Cloud Platform で Cloud Text-to-Speech APIを有効にし、サービスアカウントを作る。
 `gcloud` コマンドを使うなどしてCloud Text-to-Speech APIにアクセスできるアカウントでログインする。
@@ -89,8 +110,8 @@ npm run start
 
 また、以下の環境変数も使用できる。
 
-* ENABLE_CLOUD_LOGGING=true
-* ENABLE_SYNC_WITH_FIRESTORE=true
+- ENABLE_CLOUD_LOGGING=true
+- ENABLE_SYNC_WITH_FIRESTORE=true
 
 `ENABLE_CLOUD_LOGGING` を有効にするとログをCloud Loggingにも出力する。サービスアカウントに追加でCloud Logging出力の権限が必要になる。
 
