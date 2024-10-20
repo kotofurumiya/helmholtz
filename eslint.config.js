@@ -7,7 +7,7 @@ import js from '@eslint/js';
 
 const compat = new FlatCompat();
 
-/** @type {import("eslint").Linter.FlatConfig[]} */
+/** @type {import("eslint").Linter.Config[]} */
 export default [
   { ignores: ['node_modules', 'dist', 'eslint.config.js'] },
   js.configs.recommended,

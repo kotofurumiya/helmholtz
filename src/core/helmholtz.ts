@@ -185,10 +185,9 @@ export class Helmholtz {
       return [];
     }
 
-    return [chan, conn] || [];
+    return [chan, conn];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   handleVoiceStateUpdate(oldState: Discord.VoiceState, newState: Discord.VoiceState): void {
     if (!this.#discord || !this.#discordConfig) {
       return;
@@ -213,7 +212,7 @@ export class Helmholtz {
 
     if (isStartChat) {
       const chan = this.#discord.channels.cache.get(this.#discordConfig.sourceChannelId);
-      if (chan?.isTextBased()) {
+      if (chan?.isTextBased() && chan?.isSendable()) {
         const text = `${newState.member?.toString()} が ${newState.channel?.toString()} に参加しました！`;
         chan.send(text);
       }
@@ -347,6 +346,8 @@ export class Helmholtz {
     const conn = joinVoiceChannel({
       channelId: channel.id,
       guildId: channel.guild.id,
+      // FIXME: https://github.com/discordjs/discord.js/issues/10560
+      // @ts-expect-error: TypeError
       adapterCreator: channel.guild.voiceAdapterCreator,
     });
 

@@ -8,7 +8,7 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "start:registercommands": "ts-node tools/register_slash_commands.ts",
-    "build": "node build.js",
+    "build": "tsc --noEmit && node build.js",
     "format": "prettier --write \"*.js\" \"src/**/*\" \"tools/**/*\"",
     "lint": "prettier --check \"src/**/*\" \"tools/**/*\" && ESLINT_USE_FLAT_CONFIG=true eslint .",
     "test": "echo \"Error: no test specified\" && exit 1"
