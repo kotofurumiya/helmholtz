@@ -1,4 +1,4 @@
-FROM node:20-buster-slim AS build-stage
+FROM node:22-buster-slim AS build-stage
 
 COPY ./ /helmholtz/
 WORKDIR /helmholtz
@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && rm -rf /var/lib/apt/lists/*
 RUN npm ci && npm run build && npm prune --production
 
-FROM node:20-buster-slim
+FROM node:22-buster-slim
 
 COPY --from=build-stage /helmholtz /helmholtz
 WORKDIR /helmholtz

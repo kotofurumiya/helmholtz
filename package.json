@@ -8,7 +8,7 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "start:registercommands": "ts-node tools/register_slash_commands.ts",
-    "build": "node build.js",
+    "build": "tsc --noEmit && node build.js",
     "format": "prettier --write \"*.js\" \"src/**/*\" \"tools/**/*\"",
     "lint": "prettier --check \"src/**/*\" \"tools/**/*\" && ESLINT_USE_FLAT_CONFIG=true eslint .",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -17,30 +17,30 @@
   "license": "MIT",
   "dependencies": {
     "@discordjs/opus": "^0.9.0",
-    "@discordjs/voice": "^0.16.1",
-    "@google-cloud/firestore": "^7.2.0",
-    "@google-cloud/logging-bunyan": "^5.0.1",
-    "@google-cloud/text-to-speech": "^5.0.2",
+    "@discordjs/voice": "^0.17.0",
+    "@google-cloud/firestore": "^7.10.0",
+    "@google-cloud/logging-bunyan": "^5.1.0",
+    "@google-cloud/text-to-speech": "^5.5.0",
     "bunyan": "^1.8.15",
-    "discord.js": "^14.14.1",
-    "libsodium-wrappers": "^0.7.13"
+    "discord.js": "^14.16.3",
+    "libsodium-wrappers": "^0.7.15"
   },
   "devDependencies": {
-    "@eslint/js": "^8.56.0",
+    "@eslint/js": "^9.13.0",
     "@types/bunyan": "^1.8.11",
-    "@types/eslint": "^8.56.2",
-    "@types/node": "^20.11.7",
+    "@types/eslint": "^9.6.1",
+    "@types/node": "^22.7.7",
     "@types/node-fetch": "^2.6.11",
-    "@typescript-eslint/eslint-plugin": "^6.19.1",
-    "@typescript-eslint/parser": "^6.19.1",
-    "esbuild": "^0.19.12",
-    "eslint": "^8.56.0",
-    "eslint-plugin-tsdoc": "^0.2.17",
+    "@typescript-eslint/eslint-plugin": "^8.10.0",
+    "@typescript-eslint/parser": "^8.10.0",
+    "esbuild": "^0.24.0",
+    "eslint": "^9.13.0",
+    "eslint-plugin-tsdoc": "^0.3.0",
     "ffmpeg-static": "^5.2.0",
-    "globals": "^13.24.0",
+    "globals": "^15.11.0",
     "node-fetch": "^3.3.2",
-    "prettier": "^3.2.4",
+    "prettier": "^3.3.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.6.3"
   }
 }
