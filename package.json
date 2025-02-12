@@ -33,7 +33,7 @@
     "@types/node-fetch": "^2.6.11",
     "@typescript-eslint/eslint-plugin": "^8.10.0",
     "@typescript-eslint/parser": "^8.10.0",
-    "esbuild": "^0.24.0",
+    "esbuild": "^0.25.0",
     "eslint": "^9.13.0",
     "eslint-plugin-tsdoc": "^0.3.0",
     "ffmpeg-static": "^5.2.0",
