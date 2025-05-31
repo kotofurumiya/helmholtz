@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import { getEnvsOrExit } from '../src/core/envs';
 import { helmholtzCommand } from './slash_commands';
 

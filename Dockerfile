@@ -1,7 +1,9 @@
-FROM node:22-buster-slim AS build-stage
+FROM node:24-bookworm-slim AS build-stage
 
-COPY ./ /helmholtz/
 WORKDIR /helmholtz
+
+COPY package*.json ./
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
  python3 \
  make \
@@ -10,12 +12,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  libc-dev \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
-RUN npm ci && npm run build && npm prune --production
 
-FROM node:22-buster-slim
+RUN npm ci
 
-COPY --from=build-stage /helmholtz /helmholtz
+COPY . .
+RUN npm run build && npm prune --production
+
+FROM gcr.io/distroless/nodejs24-debian12:nonroot
+
 WORKDIR /helmholtz
 
-USER node
-ENTRYPOINT ["node", "dist/helmholtz.cjs"]
+COPY --from=build-stage /helmholtz/node_modules ./node_modules
+COPY --from=build-stage /helmholtz/dist ./dist
+
+ENTRYPOINT ["/nodejs/bin/node", "./dist/helmholtz.cjs"]

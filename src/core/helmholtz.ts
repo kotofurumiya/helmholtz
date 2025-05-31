@@ -346,8 +346,6 @@ export class Helmholtz {
     const conn = joinVoiceChannel({
       channelId: channel.id,
       guildId: channel.guild.id,
-      // FIXME: https://github.com/discordjs/discord.js/issues/10560
-      // @ts-expect-error: TypeError
       adapterCreator: channel.guild.voiceAdapterCreator,
     });
 
@@ -481,6 +479,13 @@ export class Helmholtz {
 
     this.#discord?.destroy();
     await this.#tts.close();
+
+    if (this.#firestore) {
+      await this.#firestore.terminate();
+      this.#logger?.info({
+        helmholtzMessage: 'Firestore client terminated',
+      });
+    }
 
     this.#logger?.info({
       helmholtzMessage: 'helmholtz client is destroyed successfully',
