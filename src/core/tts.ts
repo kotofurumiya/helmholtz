@@ -1,5 +1,5 @@
 import { TextToSpeechClient } from '@google-cloud/text-to-speech';
-import type Logger from 'bunyan';
+import { Logger } from './logger';
 
 export type SynthesizeOptions = {
   voiceGender?: 'male' | 'female';
@@ -88,13 +88,13 @@ export class FakeTextToSpeech implements TextToSpeech {
 
   async warmup(): Promise<void> {
     this.#logger?.debug({
-      helmholtzMessage: 'FakeTextToSpeech: warmup()',
+      msg: 'FakeTextToSpeech: warmup()',
     });
   }
 
   async synthesize(text: string, options: SynthesizeOptions = {}): Promise<Uint8Array | null | undefined> {
     this.#logger?.debug({
-      helmholtzMessage: 'FakeTextToSpeech: synthesize()',
+      msg: 'FakeTextToSpeech: synthesize()',
       text,
       options,
     });
@@ -104,7 +104,7 @@ export class FakeTextToSpeech implements TextToSpeech {
 
   async close(): Promise<void> {
     this.#logger?.debug({
-      helmholtzMessage: 'FakeTextToSpeech: close()',
+      msg: 'FakeTextToSpeech: close()',
     });
   }
 }

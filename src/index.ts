@@ -1,5 +1,5 @@
 import { getEnvsOrExit } from './core/envs';
-import { createLogger } from './core/logger';
+import { createLogger, LogLevels } from './core/logger';
 import { Helmholtz, HelmholtzConfig } from './core/helmholtz';
 import { GoogleCloudTextToSpeech } from './core/tts';
 
@@ -13,14 +13,11 @@ const discord = {
 };
 
 const ttsClient = new GoogleCloudTextToSpeech();
-const enableCloudLogging =
-  !!process.env.ENABLE_CLOUD_LOGGING && process.env.ENABLE_CLOUD_LOGGING.toLowerCase() !== 'false';
 const syncWithFirestore =
   !!process.env.ENABLE_SYNC_WITH_FIRESTORE && process.env.ENABLE_SYNC_WITH_FIRESTORE.toLowerCase() !== 'false';
 
 const logger = createLogger({
-  name: 'Helmholtz',
-  enableCloudLogging,
+  loglevel: LogLevels.INFO,
 });
 
 const config: HelmholtzConfig = {
@@ -33,7 +30,7 @@ const config: HelmholtzConfig = {
 const helmholtz = new Helmholtz(config);
 
 process.on('uncaughtException', async (error) => {
-  logger?.error(error);
+  logger?.error({ error });
   await helmholtz
     .destroy({
       reason: 'uncaughtException',
@@ -44,7 +41,7 @@ process.on('uncaughtException', async (error) => {
 });
 
 process.on('unhandledRejection', async (error) => {
-  logger?.error(error);
+  logger?.error({ error });
   await helmholtz
     .destroy({
       reason: 'uncaughtException',

@@ -4,12 +4,11 @@ await esbuild.build({
   entryPoints: ['src/index.ts'],
   bundle: true,
   platform: 'node',
-  target: 'node22',
+  target: 'node24',
   format: 'cjs',
   external: [
     '@google-cloud/firestore',
     '@google-cloud/text-to-speech',
-    '@google-cloud/logging-bunyan',
     'discord.js',
     '@discordjs/opus',
     '@discordjs/voice',

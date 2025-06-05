@@ -8,7 +8,6 @@ import Discord, {
   VoiceBasedChannel,
 } from 'discord.js';
 import { TextToSpeech } from './tts';
-import type Logger from 'bunyan';
 import { Firestore, FieldValue } from '@google-cloud/firestore';
 import {
   AudioPlayer,
@@ -19,6 +18,7 @@ import {
   getVoiceConnection,
   joinVoiceChannel,
 } from '@discordjs/voice';
+import { Logger } from './logger';
 
 type HelmholtzUserPreferences = {
   voiceGender?: 'male' | 'female';
@@ -69,7 +69,7 @@ export class Helmholtz {
 
     if (!this.#discordConfig) {
       this.#logger?.debug({
-        helmholtzMessage: 'helmholtz does not connect to discord, since cannot detect any config',
+        msg: 'helmholtz does not connect to discord, since cannot detect any config',
       });
       return;
     }
@@ -104,7 +104,7 @@ export class Helmholtz {
         this.handleVoiceStateUpdate(oldState, newState);
       } catch (e) {
         this.#logger?.error({
-          helmholtzMessage: 'cannot handle voiceStateUpdate event',
+          msg: 'cannot handle voiceStateUpdate event',
           error: e,
         });
       }
@@ -113,7 +113,7 @@ export class Helmholtz {
     discordClient.on(Events.MessageCreate, (message) => {
       this.handleMessage(message).catch((e) => {
         this.#logger?.error({
-          helmholtzMessage: 'cannot handle message event',
+          msg: 'cannot handle message event',
           error: e,
         });
       });
@@ -124,7 +124,7 @@ export class Helmholtz {
         await this.handleInteraction(interaction);
       } catch (e) {
         this.#logger?.error({
-          helmholtzMessage: 'cannot handle interaction(slash command) event',
+          msg: 'cannot handle interaction(slash command) event',
           error: e,
         });
       }
@@ -132,21 +132,21 @@ export class Helmholtz {
 
     discordClient.on('warn', (info) => {
       this.#logger?.warn({
-        helmholtzMessage: 'warning',
+        msg: 'warning',
         info,
       });
     });
 
     discordClient.on('error', (e) => {
       this.#logger?.error({
-        helmholtzMessage: 'error',
+        msg: 'error',
         error: e,
       });
     });
 
     discordClient.once('ready', () => {
       this.#logger?.info({
-        helmholtzMessage: 'Helmholtz is ready',
+        msg: 'Helmholtz is ready',
       });
     });
 
@@ -154,12 +154,12 @@ export class Helmholtz {
       .login(this.#discordConfig.token)
       .then(() => {
         this.#logger?.info({
-          helmholtzMessage: 'login succeeded',
+          msg: 'login succeeded',
         });
       })
       .catch((e) => {
         this.#logger?.error({
-          helmholtzMessage: 'login failed',
+          msg: 'login failed',
           error: e,
         });
 
@@ -196,7 +196,7 @@ export class Helmholtz {
     // do nothing if message is sent from different server.
     if (!newState.guild || newState.guild.id !== this.#discordConfig.guildId) {
       this.#logger?.warn({
-        helmholtzMessage: 'discord guild server mismatch',
+        msg: 'discord guild server mismatch',
         helmholtzGuild: this.#discordConfig.guildId,
         messageGuildId: newState.guild?.id,
       });
@@ -257,7 +257,7 @@ export class Helmholtz {
     // do nothing if message is sent from different server.
     if (!guild || guild.id !== this.#discordConfig.guildId) {
       this.#logger?.warn({
-        helmholtzMessage: 'discord guild server mismatch',
+        msg: 'discord guild server mismatch',
         helmholtzGuild: this.#discordConfig.guildId,
         messageGuildId: guild?.id,
       });
@@ -320,14 +320,14 @@ export class Helmholtz {
         this.#audioPlayer.play(audio);
       } else {
         this.#logger?.warn({
-          helmholtzMessage: 'empty audio emitted on text-to-speech service',
+          msg: 'empty audio emitted on text-to-speech service',
           originalMessageLength: message.content.length,
           filteredMessageLength: text.length,
         });
       }
     } catch (e) {
       this.#logger?.error({
-        helmholtzMessage: 'error on text-to-speech service',
+        msg: 'error on text-to-speech service',
         error: e,
       });
     }
@@ -467,7 +467,7 @@ export class Helmholtz {
     const { reason, error } = context || {};
 
     this.#logger?.info({
-      helmholtzMessage: 'destroying helmholtz client...',
+      msg: 'destroying helmholtz client...',
       reason,
       error,
     });
@@ -483,12 +483,12 @@ export class Helmholtz {
     if (this.#firestore) {
       await this.#firestore.terminate();
       this.#logger?.info({
-        helmholtzMessage: 'Firestore client terminated',
+        msg: 'Firestore client terminated',
       });
     }
 
     this.#logger?.info({
-      helmholtzMessage: 'helmholtz client is destroyed successfully',
+      msg: 'helmholtz client is destroyed successfully',
     });
   }
 }

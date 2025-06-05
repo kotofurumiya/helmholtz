@@ -110,9 +110,6 @@ npm run start
 
 また、以下の環境変数も使用できる。
 
-- ENABLE_CLOUD_LOGGING=true
 - ENABLE_SYNC_WITH_FIRESTORE=true
-
-`ENABLE_CLOUD_LOGGING` を有効にするとログをCloud Loggingにも出力する。サービスアカウントに追加でCloud Logging出力の権限が必要になる。
 
 `ENABLE_SYNC_WITH_FIRESTORE` を有効にするとスラッシュコマンドによるユーザ設定をFirestoreに永続化する。Cloud Firestoreのセットアップと、サービスアカウントに追加でCloud Firestoreの編集権限が必要になる。
