@@ -55,7 +55,8 @@ export class JsonLogger implements Logger {
       return;
     }
 
-    const p = { ...payload, severity: level.label };
+    const ts = new Date().toISOString();
+    const p = { ...payload, severity: level.label, timestamp: ts };
     const pstr = JSON.stringify(p);
 
     if (level.value === LogLevels.WARN.value) {
