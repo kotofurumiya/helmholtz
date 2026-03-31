@@ -1,11 +1,14 @@
 import { Readable } from 'stream';
-import Discord, {
+import {
+  Client,
   ChatInputCommandInteraction,
   Events,
   GatewayIntentBits,
   Interaction,
+  Message,
   Options,
   VoiceBasedChannel,
+  VoiceState,
 } from 'discord.js';
 import { TextToSpeech } from './tts';
 import { Firestore, FieldValue } from '@google-cloud/firestore';
@@ -43,7 +46,7 @@ type DestroyContext = {
 
 export class Helmholtz {
   #tts: TextToSpeech;
-  #discord?: Discord.Client;
+  #discord?: Client;
   #discordConfig: HelmholtzConfig['discord'];
   #audioPlayer: AudioPlayer;
   #userPreferences: Map<string, HelmholtzUserPreferences>;
@@ -74,7 +77,7 @@ export class Helmholtz {
       return;
     }
 
-    const discordClient = new Discord.Client({
+    const discordClient = new Client({
       rest: {
         retries: 3,
       },
@@ -188,7 +191,7 @@ export class Helmholtz {
     return [chan, conn];
   }
 
-  handleVoiceStateUpdate(oldState: Discord.VoiceState, newState: Discord.VoiceState): void {
+  handleVoiceStateUpdate(oldState: VoiceState, newState: VoiceState): void {
     if (!this.#discord || !this.#discordConfig) {
       return;
     }
@@ -232,7 +235,7 @@ export class Helmholtz {
     this.#tts.warmup();
   }
 
-  async handleMessage(message: Discord.Message): Promise<void> {
+  async handleMessage(message: Message): Promise<void> {
     if (!this.#discord || !this.#discordConfig) {
       return;
     }
@@ -333,7 +336,7 @@ export class Helmholtz {
     }
   }
 
-  async moveToVoiceChannel(channel: Discord.VoiceBasedChannel): Promise<VoiceConnection | undefined> {
+  async moveToVoiceChannel(channel: VoiceBasedChannel): Promise<VoiceConnection | undefined> {
     if (!this.#discord || !this.#discordConfig) {
       return;
     }

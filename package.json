@@ -10,29 +10,29 @@
     "start:registercommands": "node --experimental-strip-types tools/register_slash_commands.ts",
     "build": "tsc --noEmit && node build.js",
     "format": "prettier --write \"*.js\" \"src/**/*\" \"tools/**/*\"",
-    "lint": "prettier --check \"src/**/*\" \"tools/**/*\" && ESLINT_USE_FLAT_CONFIG=true eslint .",
+    "lint": "prettier --check \"src/**/*\" \"tools/**/*\" && eslint .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Koto Furumiya <kotofurumiya@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "@discordjs/opus": "^0.10.0",
-    "@discordjs/voice": "^0.18.0",
-    "@google-cloud/firestore": "^7.11.1",
-    "@google-cloud/text-to-speech": "^6.1.0",
-    "discord.js": "^14.19.3"
+    "@discordjs/voice": "^0.19.0",
+    "@google-cloud/firestore": "^8.3.0",
+    "@google-cloud/text-to-speech": "^6.4.0",
+    "discord.js": "^14.26.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.28.0",
-    "@types/node": "^22.15.29",
-    "@typescript-eslint/eslint-plugin": "^8.33.0",
-    "@typescript-eslint/parser": "^8.33.0",
-    "esbuild": "^0.25.5",
-    "eslint": "^9.28.0",
-    "eslint-plugin-tsdoc": "^0.4.0",
-    "ffmpeg-static": "^5.2.0",
-    "globals": "^16.2.0",
-    "prettier": "^3.5.3",
-    "typescript": "^5.8.3"
+    "@eslint/js": "^10.0.0",
+    "@types/node": "^25.4.0",
+    "@typescript-eslint/parser": "^8.58.0",
+    "esbuild": "^0.27.0",
+    "eslint": "^10.1.0",
+    "eslint-plugin-tsdoc": "^0.5.0",
+    "ffmpeg-static": "^5.3.0",
+    "globals": "^17.4.0",
+    "prettier": "^3.8.0",
+    "typescript": "^6.0.0",
+    "typescript-eslint": "^8.58.0"
   }
 }

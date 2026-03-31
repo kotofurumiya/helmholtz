@@ -1,4 +1,4 @@
-FROM node:24-bookworm-slim AS build-stage
+FROM node:24-trixie-slim AS build-stage
 
 WORKDIR /helmholtz
 

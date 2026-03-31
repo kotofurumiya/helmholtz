@@ -72,7 +72,7 @@ Google Cloud Platform で Cloud Text-to-Speech APIを有効にし、サービス
 
 ## 手動で動かす
 
-Node.jsのv20以降で動かす。
+Node.jsのv24以降で動かす。
 
 依存モジュールをインストールする。
 

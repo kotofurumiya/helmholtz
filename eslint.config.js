@@ -1,36 +1,32 @@
-import globals from 'globals';
-import { FlatCompat } from '@eslint/eslintrc';
-import tsEslint from '@typescript-eslint/eslint-plugin';
-import tsEslintParser from '@typescript-eslint/parser';
-import eslintPluginTsdoc from 'eslint-plugin-tsdoc';
 import js from '@eslint/js';
+import { defineConfig } from 'eslint/config';
+import tsdoc from 'eslint-plugin-tsdoc';
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
 
-const compat = new FlatCompat();
-
-/** @type {import("eslint").Linter.Config[]} */
-export default [
-  { ignores: ['node_modules', 'dist', 'eslint.config.js'] },
-  js.configs.recommended,
-  ...compat.extends('plugin:@typescript-eslint/eslint-recommended'),
-  ...compat.extends('plugin:@typescript-eslint/recommended'),
+export default defineConfig(
   {
+    ignores: ['node_modules', 'dist', 'eslint.config.js'],
+  },
+
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+
+  {
+    files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
+      ecmaVersion: 2026,
+      sourceType: 'module',
       globals: {
-        ...globals.es2021,
+        ...globals.es2026,
         ...globals.node,
-      },
-      parser: tsEslintParser,
-      parserOptions: {
-        ecmaVersion: 12,
-        sourceType: 'module',
       },
     },
     plugins: {
-      '@typescript-eslint': tsEslint,
-      'eslint-plugin-tsdoc': eslintPluginTsdoc,
+      tsdoc: tsdoc,
     },
     rules: {
-      'eslint-plugin-tsdoc/syntax': 'error',
+      'tsdoc/syntax': 'error',
     },
-  },
-];
+  }
+);
